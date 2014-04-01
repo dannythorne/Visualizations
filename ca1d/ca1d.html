@@ -1,0 +1,600 @@
+
+<html>
+<head>
+<title>CA 1D</title>
+<style>
+*
+{
+  margin:0;
+  padding:0;
+}
+body
+{
+  margin:1em;
+  color:#303030;
+}
+h1
+{
+  margin:0;
+  color:#606060;
+  font-size:150%;
+}
+div
+{
+  margin-top:0.5em;
+  margin-bottom:0.5em;
+}
+a
+{
+  text-decoration:none;
+  color:#306090;
+}
+ul
+{
+  margin-top:1em;
+  margin-left:1em;
+}
+</style>
+</head>
+<body>
+
+<div id="main">
+</div>
+
+<script>
+var g_svgNameSpace = "http://www.w3.org/2000/svg";
+function appendText( el, text)
+{
+  el.appendChild(document.createTextNode(text));
+}
+function svgCircle(cx,cy,r)
+{
+  var circle = document.createElementNS(g_svgNameSpace,"circle");
+  circle.setAttribute("cx",cx);
+  circle.setAttribute("cy",cy);
+  circle.setAttribute("r",r);
+  return circle;
+}
+function svgRect(svg,x,y,w,h)
+{
+  var rect = document.createElementNS(g_svgNameSpace,"rect");
+  rect.width.baseVal.value = w;
+  rect.height.baseVal.value = h;
+  rect.x.baseVal.value = x;
+  rect.y.baseVal.value = y;
+  rect.style.stroke = "#a8a8a8";
+  rect.style.strokeWidth = "1";
+  rect.style.fill = "#c8c8c8";
+  rect.rx.baseVal.value = 2;
+  svg.appendChild(rect);
+  return rect;
+}
+function svgRectOn( rect)
+{
+  rect.style.stroke = "#205080";
+  rect.style.strokeWidth = "1";
+  rect.style.fill = "#306090";
+  rect.rx.baseVal.value = 2;
+}
+function svgRectOff( rect)
+{
+  rect.style.stroke = "#8090a0";
+  rect.style.strokeWidth = "1";
+  rect.style.fill = "#e0e0e0";
+  rect.rx.baseVal.value = 2;
+}
+function svgRectHighlight( rect)
+{
+  rect.style.stroke = "#f07830";
+  rect.style.strokeWidth = (g_dx-g_s)+"px";
+}
+function svgRectClear( rect)
+{
+  rect.style.stroke = "#a8a8a8";
+  rect.style.strokeWidth = "1";
+  rect.style.fill = "#c8c8c8";
+  rect.rx.baseVal.value = 2;
+}
+function svgRectDim( rect)
+{
+  rect.style.stroke = "#a8a8a8";
+  rect.style.strokeWidth = "1";
+  rect.style.fill = "#b8b8b8";
+  rect.rx.baseVal.value = 2;
+}
+//------------------------------------------------------------------------------
+var g_rule; // = [ 0, 0, 0, 1, 1, 1, 1, 0].reverse(); // TODO: generalize
+var g_rulenum = 110;
+var g_gridEls; // 2d array of rect elements
+var g_gridVals; // 2d array of ones and zeros
+var g_ni; // num cells per row
+var g_nj; // num rows
+var g_w = 800; // width of svg element
+var g_h = 600; // height of svg element
+var g_x0; // offset from left edge
+var g_dx; // spacing
+var g_s; // side length
+var g_y0; // offset from top
+var g_dy; // spacing
+var g_svg;
+var g_rule_x0;
+var g_rule_y0;
+var g_rule_dx;
+var g_rule_dy;
+var g_rule_s;
+var g_ruleEls; // rect elements for displaying the rule patterns
+
+var g_jHighlight;
+var g_iHighlight;
+var g_jHighlightPrev;
+var g_iHighlightPrev;
+var g_highlightingHasStarted = false;
+var g_animParity = 1;
+var g_animPeriod = 1000;
+
+function initParams()
+{
+  g_x0 = 2;
+
+  g_ni = 27; // num cells per row
+  g_dx = ( (g_w - g_x0) / g_ni); // spacing
+  g_s = g_dx-3; // side length
+
+  g_y0 = g_x0 + 3*g_dx; // leave space for the rules to display
+  g_dy = g_dx;
+
+  g_nj = Math.floor( (g_h - g_y0) / g_dy);
+
+  g_gridEls = new Array(g_nj+1);
+  g_gridVals = new Array(g_nj+1);
+
+  for( j=0; j<=g_nj; j++)
+  {
+    g_gridEls[j] = new Array(g_ni);
+    g_gridVals[j] = new Array(g_ni);
+  }
+
+  g_rule_x0 = 8;
+  g_rule_y0 = 8;
+  g_rule_dx = 16;
+  g_rule_dy = 16;
+  g_rule_s = 14;
+
+  g_iHighlight = 0;
+  g_jHighlight = 0;
+  g_jHighlightPrev = g_jHighlight;
+}
+function initGrid()
+{
+  var i, j;
+  
+  for( j=0; j<=g_nj; j++)
+  {
+    for( i=0; i<g_ni; i++)
+    {
+      g_gridEls[j][i]
+       = svgRect( g_svg
+                , g_x0+i*g_dx
+                , g_y0+j*g_dy
+                , g_s
+                , g_s
+                );
+    }
+  }
+
+  initFirstRow();
+//for( i=0; i<g_ni; i++)
+//{
+//  //if( i==parseInt(g_ni/2)) // Math.random() < 0.5)
+//  if( Math.random() < 0.5)
+//  {
+//    g_gridVals[0][i] = 1;
+//    svgRectOn(g_gridEls[0][i]);
+//  }
+//  else
+//  {
+//    g_gridVals[0][i] = 0;
+//    svgRectOff(g_gridEls[0][i]);
+//  }
+//}
+}
+function initFirstRow()
+{
+  for( i=0; i<g_ni; i++)
+  {
+    //if( i==parseInt(g_ni/2)) // Math.random() < 0.5)
+    if( Math.random() < 0.5)
+    {
+      g_gridVals[0][i] = 1;
+      svgRectOn(g_gridEls[0][i]);
+    }
+    else
+    {
+      g_gridVals[0][i] = 0;
+      svgRectOff(g_gridEls[0][i]);
+    }
+  }
+}
+function clearGrid()
+{
+  for( j=0; j<=g_nj; j++)
+  {
+    for( i=0; i<g_ni; i++)
+    {
+      svgRectClear(g_gridEls[j][i]);
+    }
+  }
+}
+function initRules()
+{
+  g_rule = new Array(256);
+  var rulenum;
+  for( rulenum=0; rulenum<256; rulenum++)
+  {
+    g_rule[rulenum] = new Array(8);
+    g_rule[rulenum][0] = rulenum &   1;
+    g_rule[rulenum][1] = rulenum &   2;
+    g_rule[rulenum][2] = rulenum &   4;
+    g_rule[rulenum][3] = rulenum &   8;
+    g_rule[rulenum][4] = rulenum &  16;
+    g_rule[rulenum][5] = rulenum &  32;
+    g_rule[rulenum][6] = rulenum &  64;
+    g_rule[rulenum][7] = rulenum & 128;
+  }
+
+  g_ruleEls = new Array(4*8);
+  var i;
+  for( i=0; i<8; i++)
+  {
+    g_ruleEls[4*i+0]
+     = svgRect( g_svg
+              , g_rule_x0+(4*i+0)*g_rule_dx, g_rule_y0, g_rule_s, g_rule_s);
+    if( (7-i) & 4) { svgRectOn( g_ruleEls[4*i+0]);}
+              else { svgRectOff( g_ruleEls[4*i+0]);}
+    g_ruleEls[4*i+1]
+     = svgRect( g_svg
+              , g_rule_x0+(4*i+1)*g_rule_dx, g_rule_y0, g_rule_s, g_rule_s);
+    if( (7-i) & 2) { svgRectOn( g_ruleEls[4*i+1]);}
+              else { svgRectOff( g_ruleEls[4*i+1]);}
+    g_ruleEls[4*i+2]
+     = svgRect( g_svg
+              , g_rule_x0+(4*i+2)*g_rule_dx, g_rule_y0, g_rule_s, g_rule_s);
+    if( (7-i) & 1) { svgRectOn( g_ruleEls[4*i+2]);}
+              else { svgRectOff( g_ruleEls[4*i+2]);}
+
+    g_ruleEls[4*i+3]
+     = svgRect( g_svg
+              , g_rule_x0+(4*i+1)*g_rule_dx
+              , g_rule_y0+g_rule_dy
+              , g_rule_s, g_rule_s);
+  }
+}
+function clearRule()
+{
+  var i;
+  for( i=0; i<8; i++)
+  {
+    if( (7-i) & 4) { svgRectOn( g_ruleEls[4*i+0]);}
+              else { svgRectOff( g_ruleEls[4*i+0]);}
+    if( (7-i) & 2) { svgRectOn( g_ruleEls[4*i+1]);}
+              else { svgRectOff( g_ruleEls[4*i+1]);}
+    if( (7-i) & 1) { svgRectOn( g_ruleEls[4*i+2]);}
+              else { svgRectOff( g_ruleEls[4*i+2]);}
+  }
+}
+function updateRule( leftVal, midVal, rightVal)
+{
+  var val = 4*leftVal + 2*midVal + rightVal;
+  return g_rule[g_rulenum][val];
+}
+function changeRule()
+{
+  var el = document.getElementById("rulenum");
+  var rulenum = parseInt(el.value);
+  if( !isNaN(rulenum) && isFinite(rulenum))
+  {
+    if( rulenum < 0)
+    {
+      rulenum = 0;
+      el.value = rulenum;
+    }
+    if( rulenum > 255)
+    {
+      rulenum = 255;
+      el.value = rulenum;
+    }
+    g_rulenum = rulenum;
+
+    clearGrid();
+    initFirstRow();
+    clearRule();
+    g_highlightingHasStarted = false;
+    g_animParity = 1;
+    g_iHighlight = 0;
+    g_jHighlight = 0;
+    g_jHighlightPrev = g_jHighlight;
+    computeAutomaton();
+    displayRule();
+  }
+  else
+  {
+    el.value = g_rulenum;
+    // TODO: Display an error message?
+  }
+}
+function computeAutomaton()
+{
+  var i, j;
+
+  for( j=1; j<=g_nj; j++)
+  {
+    if( updateRule( g_gridVals[j-1][g_ni-1]
+                  , g_gridVals[j-1][0]
+                  , g_gridVals[j-1][1]))
+    {
+      g_gridVals[j][0] = 1;
+      svgRectDim(g_gridEls[j][0]);
+    }
+    else
+    {
+      g_gridVals[j][0] = 0;
+    }
+
+    for( i=1; i<g_ni-1; i++)
+    {
+      if( updateRule( g_gridVals[j-1][i-1]
+                    , g_gridVals[j-1][i]
+                    , g_gridVals[j-1][i+1]))
+      {
+        g_gridVals[j][i] = 1;
+        svgRectDim(g_gridEls[j][i]);
+      }
+      else
+      {
+        g_gridVals[j][i] = 0;
+      }
+    }
+
+    if( updateRule( g_gridVals[j-1][g_ni-2]
+                  , g_gridVals[j-1][g_ni-1]
+                  , g_gridVals[j-1][0]      ) )
+    {
+      g_gridVals[j][g_ni-1] = 1;
+      svgRectDim(g_gridEls[j][g_ni-1]);
+    }
+    else
+    {
+      g_gridVals[j][g_ni-1] = 0;
+    }
+  }
+
+}
+function displayAutomaton()
+{
+  var i, j;
+
+  for( j=1; j<=g_nj; j++)
+  {
+    if( updateRule( g_gridVals[j-1][g_ni-1]
+                  , g_gridVals[j-1][0]
+                  , g_gridVals[j-1][1]))
+    {
+      svgRectOn(g_gridEls[j][0]);
+    }
+    else
+    {
+      svgRectOff(g_gridEls[j][0]);
+    }
+
+    for( i=1; i<g_ni-1; i++)
+    {
+      if( updateRule( g_gridVals[j-1][i-1]
+                    , g_gridVals[j-1][i]
+                    , g_gridVals[j-1][i+1]))
+      {
+        svgRectOn(g_gridEls[j][i]);
+      }
+      else
+      {
+        svgRectOff(g_gridEls[j][i]);
+      }
+    }
+
+    if( updateRule( g_gridVals[j-1][g_ni-2]
+                  , g_gridVals[j-1][g_ni-1]
+                  , g_gridVals[j-1][0]      ) )
+    {
+      svgRectOn(g_gridEls[j][g_ni-1]);
+    }
+    else
+    {
+      svgRectOff(g_gridEls[j][g_ni-1]);
+    }
+  }
+}
+function displayRule()
+{
+  var i;
+  for( i=0; i<8; i++)
+  {
+    if( g_rule[g_rulenum][7-i])
+    {
+      svgRectOn( g_ruleEls[4*i+3]);
+    }
+    else
+    {
+      svgRectOff( g_ruleEls[4*i+3]);
+    }
+  }
+}
+function highlightRuleAt(row,col)
+{
+  svgRectHighlight( g_gridEls[row][(col+g_ni-1)%g_ni]);
+  svgRectHighlight( g_gridEls[row][ col             ]);
+  svgRectHighlight( g_gridEls[row][(col+g_ni+1)%g_ni]);
+  svgRectHighlight( g_gridEls[row+1][col]);
+  var val = 4*g_gridVals[row][(col+g_ni-1)%g_ni]
+          + 2*g_gridVals[row][ col]
+          + 1*g_gridVals[row][(col+g_ni+1)%g_ni]
+          ;
+  val = 7 - val;
+  svgRectHighlight( g_ruleEls[ 4*(val) + 0]);
+  svgRectHighlight( g_ruleEls[ 4*(val) + 1]);
+  svgRectHighlight( g_ruleEls[ 4*(val) + 2]);
+  svgRectHighlight( g_ruleEls[ 4*(val) + 3]);
+}
+function unhighlightRuleAt(row,col)
+{
+  if( g_gridVals[row][(col+g_ni-1)%g_ni])
+       { svgRectOn( g_gridEls[row][(col+g_ni-1)%g_ni]); }
+  else { svgRectOff( g_gridEls[row][(col+g_ni-1)%g_ni]);}
+  if( g_gridVals[row][col])
+       { svgRectOn( g_gridEls[row][col]); }
+  else { svgRectOff( g_gridEls[row][col]);}
+  if( g_gridVals[row][(col+g_ni+1)%g_ni])
+       { svgRectOn( g_gridEls[row][(col+g_ni+1)%g_ni]); }
+  else { svgRectOff( g_gridEls[row][(col+g_ni+1)%g_ni]);}
+  if( g_gridVals[row+1][col])
+       { svgRectOn( g_gridEls[row+1][col]); }
+  else { svgRectOff( g_gridEls[row+1][col]);}
+
+  var val = 4*g_gridVals[row][(col+g_ni-1)%g_ni]
+          + 2*g_gridVals[row][ col]
+          + 1*g_gridVals[row][(col+g_ni+1)%g_ni]
+          ;
+  val = 7 - val;
+  if( g_rule[g_rulenum][7-val]) { svgRectOn( g_ruleEls[ 4*(val) + 3]);}
+                           else { svgRectOff( g_ruleEls[ 4*(val) + 3]);}
+  if( g_gridVals[row][(col+g_ni-1)%g_ni])
+       { svgRectOn( g_ruleEls[ 4*(val) + 0]);}
+  else { svgRectOff( g_ruleEls[ 4*(val) + 0]);}
+  if( g_gridVals[row][col])
+       { svgRectOn( g_ruleEls[ 4*(val) + 1]);}
+  else { svgRectOff( g_ruleEls[ 4*(val) + 1]);}
+  if( g_gridVals[row][(col+g_ni+1)%g_ni])
+       { svgRectOn( g_ruleEls[ 4*(val) + 2]);}
+  else { svgRectOff( g_ruleEls[ 4*(val) + 2]);}
+}
+function highlightNext()
+{
+  if( g_animParity)
+  {
+    if( g_highlightingHasStarted)
+    {
+      unhighlightRuleAt( g_jHighlightPrev, g_iHighlightPrev);
+    }
+    else
+    {
+      g_highlightingHasStarted = true;
+    }
+
+    highlightRuleAt( g_jHighlight, g_iHighlight);
+
+    g_iHighlightPrev = g_iHighlight;
+    if( !g_iHighlightPrev) { g_jHighlightPrev = g_jHighlight;}
+    g_iHighlight = ( g_iHighlight+1)%g_ni;
+    if( !g_iHighlight)
+    {
+      g_jHighlight = ( g_jHighlight+1) % g_nj;
+    }
+  }
+  else
+  {
+    if( g_gridVals[g_jHighlightPrev+1][g_iHighlightPrev])
+    {
+      svgRectOn( g_gridEls[g_jHighlightPrev+1][g_iHighlightPrev]);
+    }
+    else
+    {
+      svgRectOff( g_gridEls[g_jHighlightPrev+1][g_iHighlightPrev]);
+    }
+    svgRectHighlight( g_gridEls[g_jHighlightPrev+1][g_iHighlightPrev]);
+  }
+
+  g_animParity = 1 - g_animParity;
+
+  if( g_jHighlightPrev+1==g_nj && g_iHighlightPrev==g_ni-1)
+  {
+    // Stop
+    unhighlightRuleAt( g_jHighlightPrev, g_iHighlightPrev);
+  }
+  else
+  {
+    if( g_animPeriod > 50) { g_animPeriod-=10;}
+    setTimeout( highlightNext, g_animPeriod);
+  }
+}
+//------------------------------------------------------------------------------
+function main()
+{
+  var main = document.getElementById("main");
+
+  var el;
+
+  el = document.createElement("h1");
+  el.innerHTML = "Elementary 1D Cellular Automata";
+  main.appendChild(el);
+
+  el = document.createElement("div");
+  var description = "Each cell in the next row is updated according to the pattern of the three cells above it. There are two possible values for each cell, one and zero (blue and white), so there are eight possible triplet patterns (000,001,010,011,100,101,110,111). That makes 256 possible assignments of update rules, one or zero for each of the eight triples (2<sup>8</sup>). The speed of the visualization of updates will accelerate until it is going pretty fast after the first row or so. Enter a different number between 0 and 255 and click 'Change Rule' to see a different rule. Go to <a href='http://mathworld.wolfram.com/ElementaryCellularAutomaton.html'>http://mathworld.wolfram.com/ElementaryCellularAutomaton.html</a> for a catalog of all the rules and more information.";
+  el.innerHTML = description;
+  el.style.width = g_w;
+  el.style.textAlign = "justify";
+  el.style.marginBottom = "0.5em";
+  main.appendChild(el);
+
+  el = document.createElement("div");
+  el.appendChild(document.createElement("input"));
+  el.children[0].id = "rulenum";
+  el.children[0].value = g_rulenum;
+  el.children[0].style.width = "4em";
+  el.children[0].style.boxShadow = "0px 0px 2px 1px #606060";
+  el.children[0].addEventListener( "blur", changeRule);
+  el.appendChild(document.createElement("button"));
+  el.children[1].type = "button";
+  el.children[1].innerHTML = "Change Rule";
+  el.children[1].addEventListener( "click", changeRule);
+  main.appendChild(el);
+
+  g_svg = document.createElementNS(g_svgNameSpace,"svg");
+  g_svg.setAttribute("width",g_w);
+  g_svg.setAttribute("height",g_h);
+  g_svg.style.backgroundColor = "#a8c0d8";
+  main.appendChild(g_svg);
+
+  var n = 0;
+  el = document.createElement("ul");
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Let user control speed.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Provide a 'step' button.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Capture the enter key on the input element.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Let user adjust cell size.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Less terse explanation.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Let user click cells in first row to set initial condition.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: Let user click to set the update rules.";
+  el.appendChild(document.createElement("li"));
+  el.children[n++].innerHTML = "TODO: ...";
+  main.appendChild(el);
+
+  initParams();
+
+  initGrid();
+
+  initRules();
+
+  computeAutomaton();
+  displayRule();
+
+  setTimeout( highlightNext, g_animPeriod);
+
+}
+window.onload = main;
+</script>
+</body>
+</html>
