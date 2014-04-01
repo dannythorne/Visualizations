@@ -37,7 +37,8 @@ ul
 #todolist
 {
   margin-top:3em;
-  color:#606060;
+  color:#a8a8a8;
+  font-size:90%;
 }
 </style>
 </head>
@@ -134,6 +135,7 @@ var g_iHighlight;
 var g_jHighlightPrev;
 var g_iHighlightPrev;
 var g_highlightingHasStarted = false;
+var g_highlightingHasEnded = false;
 var g_animParity = 1;
 var g_animPeriod = 1000;
 
@@ -145,10 +147,16 @@ function initParams()
   g_dx = ( (g_w - g_x0) / g_ni); // spacing
   g_s = g_dx-3; // side length
 
-  g_y0 = g_x0 + 3*g_dx; // leave space for the rules to display
+  g_rule_x0 = 8;
+  g_rule_y0 = 8;
+  g_rule_dx = 16;
+  g_rule_dy = 16;
+  g_rule_s = 14;
+
+  g_y0 = g_x0 + 4*g_rule_dy; // leave space for the rules to display
   g_dy = g_dx;
 
-  g_nj = Math.floor( (g_h - g_y0) / g_dy);
+  g_nj = Math.floor( (g_h - g_y0 - g_dy/2) / g_dy);
 
   g_gridEls = new Array(g_nj+1);
   g_gridVals = new Array(g_nj+1);
@@ -158,12 +166,6 @@ function initParams()
     g_gridEls[j] = new Array(g_ni);
     g_gridVals[j] = new Array(g_ni);
   }
-
-  g_rule_x0 = 8;
-  g_rule_y0 = 8;
-  g_rule_dx = 16;
-  g_rule_dy = 16;
-  g_rule_s = 14;
 
   g_iHighlight = 0;
   g_jHighlight = 0;
@@ -318,8 +320,14 @@ function changeRule()
     g_iHighlight = 0;
     g_jHighlight = 0;
     g_jHighlightPrev = g_jHighlight;
+    g_iHighlightPrev = -1;
     computeAutomaton();
     displayRule();
+    if( g_highlightingHasEnded)
+    {
+      g_highlightingHasEnded = false;
+      setTimeout( highlightNext, g_animPeriod);
+    }
   }
   else
   {
@@ -522,6 +530,7 @@ function highlightNext()
   {
     // Stop
     unhighlightRuleAt( g_jHighlightPrev, g_iHighlightPrev);
+    g_highlightingHasEnded = true;
   }
   else
   {
@@ -575,15 +584,15 @@ function main()
   el.appendChild(document.createElement("li"));
   el.children[n++].innerHTML = "TODO: Provide a 'step' button.";
   el.appendChild(document.createElement("li"));
-  el.children[n++].innerHTML = "TODO: Capture the enter key on the input element.";
+  el.children[n++].innerHTML = "TODO: Capture the enter key in the input element.";
   el.appendChild(document.createElement("li"));
   el.children[n++].innerHTML = "TODO: Let user adjust cell size.";
   el.appendChild(document.createElement("li"));
   el.children[n++].innerHTML = "TODO: Less terse explanation.";
   el.appendChild(document.createElement("li"));
-  el.children[n++].innerHTML = "TODO: Let user click cells in first row to set initial condition.";
+  el.children[n++].innerHTML = "TODO: Let user click cells in first row to customize the initial condition.";
   el.appendChild(document.createElement("li"));
-  el.children[n++].innerHTML = "TODO: Let user click to set the update rules.";
+  el.children[n++].innerHTML = "TODO: Let user click ont the update rules to change them directly.";
   el.appendChild(document.createElement("li"));
   el.children[n++].innerHTML = "TODO: ...";
   main.appendChild(el);
@@ -598,7 +607,6 @@ function main()
   displayRule();
 
   setTimeout( highlightNext, g_animPeriod);
-
 }
 window.onload = main;
 </script>
