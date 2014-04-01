@@ -34,6 +34,11 @@ ul
   margin-top:1em;
   margin-left:1em;
 }
+#todolist
+{
+  margin-top:3em;
+  color:#606060;
+}
 </style>
 </head>
 <body>
@@ -564,6 +569,7 @@ function main()
 
   var n = 0;
   el = document.createElement("ul");
+  el.id = "todolist";
   el.appendChild(document.createElement("li"));
   el.children[n++].innerHTML = "TODO: Let user control speed.";
   el.appendChild(document.createElement("li"));
