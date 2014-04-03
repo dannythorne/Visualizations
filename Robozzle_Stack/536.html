@@ -1,0 +1,312 @@
+
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="./styles.css" />
+<title>536</title>
+<style>
+img
+{
+  padding:0;
+  margin:0;
+}
+</style>
+</head>
+<body>
+
+<div id="pagetitle">
+<a href="http://robozzle.com/index.aspx?puzzle=536">536</a>
+</div>
+
+<script>
+
+var g_command_size = 30;
+var g_num_rows = 5;
+
+var g_j = 1;
+var g_i = 1;
+
+var g_num_moves = 0;
+
+var g_piece_size = 40;
+var g_ci = 1;
+var g_cj = 1;
+
+window.onload = function()
+{
+  init();
+}
+
+function init()
+{
+  var div;
+  div = document.getElementById("pagetitle");
+  if( div)
+  {
+    div.style.position = "absolute";
+    div.style.top = (g_num_rows+1.5)*g_command_size + "px";
+    div.style.left = g_command_size + "px";
+    div.children[0].style.color = "#606060";
+  }
+
+  place_command("forward", 1, 1);
+  place_command("f2_blue", 1, 2);
+  place_command("forward", 1, 3);
+  var j;
+  for( j=2; j<=g_num_rows; j++)
+  {
+    place_command("forward", j, 1);
+    place_command("f2_blue", j, 2);
+    place_command("forward", j, 3);
+    hide_command(j,1);
+    hide_command(j,2);
+    hide_command(j,3);
+  }
+
+  place_step_button();
+
+  draw_board();
+
+  first_step();
+}
+
+function place_step_button()
+{
+  var div;
+  div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.left = g_command_size*3 + "px";
+  div.style.top = g_command_size*(g_num_rows + 1.5) + "px";
+
+  var img;
+  img = document.createElement("img");
+  img.src = "step.png";
+  img.style.border = "1px solid #ffffff";
+  img.style.borderRadius = "4px";
+  img.addEventListener("click",function(){step();},false);
+  img.id = "step_button";
+
+  div.appendChild(img);
+
+  document.body.appendChild(div);
+}
+
+function fade_step_button()
+{
+  var div;
+  div = document.getElementById("step_button");
+  div.style.opacity = 0.5;
+}
+
+function place_command(command,j,i)
+{
+  var div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.left = g_command_size*i+"px";
+  div.style.top = g_command_size*(g_num_rows - j + 1)+"px";
+
+  var img;
+  img = document.createElement("img");
+  img.src = "./"+command+".png";
+  img.id = j+"_"+i;
+  div.appendChild(img);
+  document.body.appendChild(div);
+}
+
+function hide_command( j, i)
+{
+  var x = document.getElementById(j+"_"+i);
+  x.style.visibility = "hidden";
+}
+
+function show_command( j, i)
+{
+  var x = document.getElementById(j+"_"+i);
+  x.style.visibility = "visible";
+}
+
+function fade_command( j, i)
+{
+  var x = document.getElementById(j+"_"+i);
+  x.style.opacity = 0.5;
+}
+
+function first_step()
+{
+  var div;
+
+  div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.left = g_command_size*g_i + 1 + "px";
+  div.style.top = g_command_size*(g_num_rows - g_j + 1) + 1 + "px";
+  div.style.width = g_command_size - 2;
+  div.style.height = g_command_size - 2;
+  div.style.boxShadow = "0px 0px 6px #ffffff inset";
+  div.id = "step_inner";
+  document.body.appendChild(div);
+
+  div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.left = g_command_size*g_i + "px";
+  div.style.top = g_command_size*(g_num_rows - g_j + 1) + "px";
+  div.style.width = g_command_size - 2;
+  div.style.height = g_command_size - 2;
+  div.style.border = "1px dashed #ffffff";
+  div.id = "step_outer";
+  document.body.appendChild(div);
+
+}
+
+function step()
+{
+  fade_command(g_j,g_i);
+
+  if( g_i < 2)
+  {
+    if( g_i==1)
+    {
+      move();
+      record_move("forward");
+    }
+    g_i++;
+  }
+  else if( g_i==2)
+  {
+    if( g_j < g_num_rows)
+    {
+      g_j++;
+      g_i = 1;
+
+      var i;
+      for( i=1; i<=3; i++)
+      {
+        show_command( g_j, i);
+      }
+    }
+    else
+    {
+      g_i++;
+    }
+  }
+  else
+  {
+    if( g_j>0)
+    {
+      move();
+      record_move("forward");
+      g_j--;
+      if( g_j==0) { fade_step_button();}
+    }
+  }
+
+  var div;
+
+  div = document.getElementById("step_inner");
+  div.style.left = g_command_size*g_i + 1 + "px";
+  div.style.top = g_command_size*(g_num_rows - g_j + 1) + 1 + "px";
+  if( g_j==0)
+  {
+    div.style.visibility = "hidden";
+  }
+
+  div = document.getElementById("step_outer");
+  div.style.left = g_command_size*g_i + "px";
+  div.style.top = g_command_size*(g_num_rows - g_j + 1) + "px";
+  if( g_j==0)
+  {
+    div.style.visibility = "hidden";
+  }
+
+}
+
+function record_move(command)
+{
+  g_num_moves++;
+  place_command( command, -2, g_num_moves);
+}
+
+function draw_board()
+{
+  var board = document.createElement("div");
+  board.style.position = "absolute";
+  board.style.left = g_command_size*7 + "px";
+  board.style.top = g_command_size + "px";
+  board.style.width = g_piece_size*(2*(g_num_rows+1)+1)+"px";
+  board.style.height = g_piece_size*3+"px";
+  board.style.backgroundColor = "#303030";
+  board.style.boxShadow = "0px 0px 16px #000000";
+  board.style.borderRadius = "8px";
+
+  document.body.appendChild(board);
+
+
+  for( j=1; j<=2*g_num_rows+1; j++)
+  {
+    if( j==1)
+    {
+      draw_piece( "blue_right", board, 1, j);
+    }
+    else if( j==g_num_rows+1)
+    {
+      draw_piece( "red", board, 1, j);
+    }
+    else
+    {
+      draw_piece( "blue", board, 1, j);
+    }
+  }
+}
+
+function draw_piece( piece_str, board, j, i)
+{
+  var piece;
+  var img;
+
+  piece = document.createElement("div");
+  piece.style.position = "absolute";
+  piece.style.left = (i)*g_piece_size + "px";
+  piece.style.top = (j)*g_piece_size + "px";
+  img = document.createElement("img");
+  img.src = piece_str+".png";
+  img.id = "piece_"+j+"_"+i;
+  piece.appendChild(img);
+  board.appendChild(piece);
+}
+
+function move()
+{
+  if( g_ci<=g_num_rows)
+  {
+    img = document.getElementById("piece_"+g_cj+"_"+g_ci);
+    img.src = "blue.png";
+    g_ci++;
+    img = document.getElementById("piece_"+g_cj+"_"+g_ci);
+    if( g_ci<=g_num_rows)
+    {
+      img.src = "blue_right.png";
+    }
+    else
+    {
+      img.src = "red_right.png";
+    }
+  }
+  else
+  {
+    img = document.getElementById("piece_"+g_cj+"_"+g_ci);
+    if( g_ci==g_num_rows+1)
+    {
+      img.src = "red.png";
+    }
+    else
+    {
+      img.src = "blue.png";
+    }
+    g_ci++;
+    img = document.getElementById("piece_"+g_cj+"_"+g_ci);
+    img.src = "blue_right.png";
+  }
+}
+
+</script>
+
+</body>
+</html>

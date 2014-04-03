@@ -1,0 +1,107 @@
+
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="./styles.css" />
+<title>RoboZZle Call Stack Illustrations</title>
+<style>
+.others-container
+{
+  margin-top:4em;
+}
+.others
+{
+  background-color:#303030;
+  padding:1em;
+  margin-left:auto;
+  margin-right:auto;
+  width:50%;
+  border-radius:8px;
+  color:#c0c0c0;
+  margin-top:0.5em;
+  text-align:center;
+}
+.others > a
+{
+  color:#ffffff;
+  font-weight:bold;
+}
+.others-url-template
+{
+  font-family:monospace;
+  font-weight:bold;
+  font-size:120%;
+  margin-top:2em;
+  text-align:center;
+  color:#606060;
+}
+.others-puzzle-number
+{
+  color:#c000c0;
+  padding-left:2px;
+  padding-right:2px;
+  font-style:normal;
+}
+.others-url-template-instruction
+{
+  text-align:center;
+  margin-top:0.25em;
+  font-style:italic;
+  color:#606060;
+}
+#page-url
+{
+  font-family:monospace;
+  font-weight:bold;
+  color:#303030;
+  font-size:130%;
+  margin-bottom:1em;
+  background-color:#d8d8d8;
+  text-align:center;
+}
+</style>
+</head>
+<body>
+
+<div id="page-url">
+http://gchpcc.georgetowncollege.edu/~dthorne0/RoboZZle/
+</div>
+
+<div id="pagetitle">
+RoboZZle Call Stack Illustrations
+</div>
+
+<ul>
+  <li><a href="./536.html">536</a></li>
+  <li><a href="./330.html">330</a></li>
+  <li><a href="./656.html">656</a></li>
+</ul>
+
+<div class="others-container">
+<div class="others-label">
+Some other puzzles that use this technique:
+</div>
+<div class="others">
+<b>[</b>
+<a href="http://robozzle.com/index.aspx?puzzle=536"> 536 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=330"> 330 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=656"> 656 </a>
+<b>]</b>
+&nbsp;
+<a href="http://robozzle.com/index.aspx?puzzle=106"> 106 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=380"> 380 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=171"> 171 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=37" > 37  </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=188"> 188 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=555"> 555 </a>,
+<a href="http://robozzle.com/index.aspx?puzzle=511"> 511 </a>
+</div>
+<div class="others-url-template">
+http://robozzle.com/index.aspx?puzzle=<span class="others-puzzle-number">N</span>
+</div>
+<div class="others-url-template-instruction">
+Replace <span class="others-url-template others-puzzle-number">N</span> with the puzzle number.
+</div>
+</div>
+
+</body>
+</html>
