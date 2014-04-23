@@ -21,7 +21,8 @@ int frame_rate = 20;
 
 void setup()
 {
-  size(s*n,s*n);
+  //size(s*n,s*n);
+  size(744,744); // Can't have variable size with processing.js
   frameRate(frame_rate);
 }
 
@@ -169,37 +170,6 @@ void draw()
     }
 
   }
-}
-
-void shell_sort()
-{
-  int i, j, v, k;
-
-  for( k=0; k<33; k++)
-  {
-    i = int(random(n));
-    j = int(random(n));
-    v = a[i];
-    a[i] = a[j];
-    a[j] = v;
-  }
-
-//for( h=1; h<=(n+1)/9; h=3*h+1) {}
-//for( ; h>=0; h/=3)
-//{
-//  for( i=h; i<n; i+=1)
-//  {
-//    v = a[i];
-//    j = i;
-//    while( j>h-1 && a[j-h]>v)
-//    {
-//      a[j] = a[j-h];
-//      j-=h;
-//      //redraw();
-//    }
-//    a[j] = v;
-//  } 
-//}
 }
 
 void keyPressed()
