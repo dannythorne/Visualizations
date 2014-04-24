@@ -1,0 +1,55 @@
+
+<html>
+<head>
+<title>Linked Merge with Pencil and Paper</title>
+<style>
+body
+{
+  color:#303030;
+}
+div
+{
+  text-align:center;
+}
+img
+{
+  border-radius:8px;
+  margin-top:1em;
+  box-shadow:0px 0px 8px 1px #000000;
+}
+h1
+{
+  color:#606060;
+}
+.booktitle
+{
+  font-style:italic;
+}
+.panels
+{
+}
+</style>
+</head>
+<body>
+
+<h1>Linked-List Mergesort</h1>
+
+<p>
+Very low tech visualization of bottom-up mergesort on a small linked list. This
+follows the algorithm shown in Sedgewick, <span class="booktitle">Algorithms in
+C++</span>, 1992 (pg.
+170).
+</p>
+
+<div>
+<img src="./01.png">
+</div>
+<div>
+<img src="./02.png">
+</div>
+<div>
+<img src="./03.png">
+</div>
+
+</body>
+</html>

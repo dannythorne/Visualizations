@@ -1,0 +1,497 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>demo_rk4</title>
+      <meta name="generator" content="MATLAB 7.5">
+      <meta name="date" content="2014-04-02">
+      <meta name="m-file" content="demo_rk4"><style>
+
+body {
+  background-color: #e0e0e0;
+  margin:10px;
+}
+
+h1 {
+  color: #909090; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #606060;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre
+{
+  color:#303030;
+}
+
+pre.codeinput {
+  background: #e0e0e0;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p
+{
+  color:#303030;
+  padding:0.5em;
+  border-top:1px solid #909090;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+img
+{
+  border-radius:8px;
+  box-shadow:0 0 8px 0 #000000;
+}
+
+  </style></head>
+   <body>
+   <h1>4th Order Runge Kutta</h1>
+      <div class="content"><pre class="codeinput">t = 0.3;
+
+t0=0;
+t1=1;
+nt = 100; <span class="comment">% Number of intervals</span>
+tvec = linspace(t0,t1,nt+1);
+dt = tvec(2)-tvec(1);
+
+<span class="keyword">if</span>( t&lt;t0 || t&gt;t1)
+  t = 0.3;
+<span class="keyword">end</span>
+
+x0=0;
+x1=1;
+nx = 100; <span class="comment">% Number of intervals</span>
+xvec = linspace(x0,x1,nx+1);
+dx = xvec(2)-xvec(1);
+
+[tmesh,xmesh] = meshgrid(tvec,xvec);
+tdirs = ones(size(tmesh));
+xdirs = f( tmesh, xmesh);
+smesh = sqrt(tdirs.^2+xdirs.^2); <span class="comment">% Scaling factors</span>
+
+set(gca,<span class="string">'fontname'</span>,<span class="string">'times'</span>);
+set(gca,<span class="string">'ydir'</span>,<span class="string">'reverse'</span>);
+set(gca,<span class="string">'yticklabel'</span>,flipud(get(gca,<span class="string">'yticklabel'</span>)));
+axis <span class="string">image</span>;
+axis([ t0 t1 x0 x1]);
+set(gca,<span class="string">'activepositionproperty'</span>,<span class="string">'position'</span>);
+hold <span class="string">on</span>;
+title(<span class="string">'RK4'</span>);
+xlabel(<span class="string">'{\it t}'</span>);
+ylabel(<span class="string">'{\it x}'</span>);
+
+markersize = 14;
+</pre><img vspace="5" hspace="5" src="demo_rk4_01.png"> <p>Grid.</p><pre class="codeinput"><span class="keyword">for</span> i=t0:dt:t1
+    hnd = line( i*[ 1 1],   [ x0 x1]);
+    set(hnd, <span class="string">'color'</span>,0.9*[ 1 1 1]);
+<span class="keyword">end</span>
+<span class="keyword">for</span> i=x0:dx:x1
+    hnd = line(   [ t0 t1], i*[ 1 1]);
+    set(hnd, <span class="string">'color'</span>,0.9*[ 1 1 1]);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_rk4_02.png"> <p>Direction field. (May not show up very well at this zoom level, but we will zoom in soon.)</p><pre class="codeinput">colormap(gray);
+hnd=quiver(tmesh,xmesh,tdirs./smesh,xdirs./smesh,1/3);
+set(hnd,<span class="string">'showarrowhead'</span>,<span class="string">'off'</span>);
+set(hnd,<span class="string">'color'</span>,0.8*[ 1 1 1]);
+hnd=quiver(tmesh,xmesh,-tdirs./smesh,-xdirs./smesh,1/3);
+set(hnd,<span class="string">'showarrowhead'</span>,<span class="string">'off'</span>);
+set(hnd,<span class="string">'color'</span>,0.8*[ 1 1 1]);
+</pre><img vspace="5" hspace="5" src="demo_rk4_03.png"> <p>Exact solution from t0 to t1 with initial condition (0,0).</p><pre class="codeinput">hnd=plot( tvec, xsoln(tvec));
+set(hnd,<span class="string">'color'</span>,0.5*[ 1 1 1]);
+
+ti1 = t*nt/t1+1; <span class="comment">% Where/when to start the step.</span>
+h = 10*dt;     <span class="comment">% Absurdly large step size for illustration.</span>
+ti2 = (t+h)*nt/t1+1; <span class="comment">% Where/when to start the step.</span>
+x  = xsoln(t);
+x2 = xsoln(t+h);
+m1 = f(t     , x);
+m2 = f(t+.5*h, x+.5*h*m1);
+m3 = f(t+.5*h, x+.5*h*m2);
+m4 = f(t+   h, x+   h*m3);
+</pre><img vspace="5" hspace="5" src="demo_rk4_04.png"> <p>Darken solution over range of the step and mark starting and ending points.</p><pre class="codeinput">trange = [ti1:ti2];
+hnd=plot( tvec(trange), xsoln(tvec(trange)));
+set(hnd,<span class="string">'linewidth'</span>,2);
+set(hnd,<span class="string">'color'</span>,0.5*[ 1 1 1]);
+
+hnd = plot( t, x, <span class="string">'.'</span>);
+set(hnd,<span class="string">'markersize'</span>,markersize);
+set(hnd,<span class="string">'color'</span>,0.5*[ 1 1 1]);
+hnd = plot( t+h, xsoln(t+h), <span class="string">'.'</span>);
+set(hnd,<span class="string">'markersize'</span>,markersize);
+set(hnd,<span class="string">'color'</span>,0.5*[ 1 1 1]);
+</pre><img vspace="5" hspace="5" src="demo_rk4_05.png"> <p>Zoom in</p><pre class="codeinput">axis([ t-.5*h t+h+.5*h xsoln(t+h)-.5*h xsoln(t)+.5*h]);
+</pre><img vspace="5" hspace="5" src="demo_rk4_06.png"> <p>Mark slope m1.</p><pre class="codeinput">hnd=line( [ t-.1*h t+.1*h], [ x-.1*h*m1 x+.1*h*m1]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 0 0 1] + .0*[ 1 1 0]);
+hnd=plot( t, x, <span class="string">'.'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 0 0 1] + .0*[ 1 1 0]);
+hnd=text( t, x, <span class="string">'{\it m}_1'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 0 0 1] + .5*[ 1 1 0]);
+set(hnd,<span class="string">'horizontalalignment'</span>,<span class="string">'center'</span>)
+set(hnd,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>)
+set(hnd,<span class="string">'fontname'</span>,<span class="string">'times'</span>)
+</pre><img vspace="5" hspace="5" src="demo_rk4_07.png"> <p>Line with slope m1 through point (t,x)</p><pre class="codeinput">hnd=line( [ t-100*h t+100*h], [ x-100*h*m1 x+100*h*m1]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 0 0 1] + .5*[ 1 1 0]);
+set(hnd,<span class="string">'linestyle'</span>,<span class="string">'--'</span>);
+</pre><img vspace="5" hspace="5" src="demo_rk4_08.png"> <p>Mark slope m2.</p><pre class="codeinput">hnd=line( [ t+.5*h-.1*h t+.5*h+.1*h], [ x+.5*h*m1-.1*h*m2 x+.5*h*m1+.1*h*m2]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 0 1] + .0*[ 0 1 0]);
+hnd=plot( t+.5*h, x+.5*h*m1, <span class="string">'.'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 0 1] + .0*[ 0 1 0]);
+hnd=text( t+.5*h, x+.5*h*m1, <span class="string">'{\it m}_2'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 0 1] + .5*[ 0 1 0]);
+set(hnd,<span class="string">'horizontalalignment'</span>,<span class="string">'right'</span>)
+set(hnd,<span class="string">'verticalalignment'</span>,<span class="string">'bottom'</span>)
+set(hnd,<span class="string">'fontname'</span>,<span class="string">'times'</span>)
+</pre><img vspace="5" hspace="5" src="demo_rk4_09.png"> <p>Line with slope m2 through point (t,x)</p><pre class="codeinput">hnd=line( [ t-100*h t+100*h], [ x-100*h*m2 x+100*h*m2]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 0 1] + .5*[ 0 1 0]);
+set(hnd,<span class="string">'linestyle'</span>,<span class="string">'--'</span>);
+</pre><img vspace="5" hspace="5" src="demo_rk4_10.png"> <p>Mark slope m3.</p><pre class="codeinput">hnd=line( [ t+.5*h-.1*h t+.5*h+.1*h], [ x+.5*h*m2-.1*h*m3 x+.5*h*m2+.1*h*m3]);
+set(hnd,<span class="string">'color'</span>,0.7*[ 0 1 0] + .0*[ 1 0 1]);
+hnd=plot( t+.5*h, x+.5*h*m2, <span class="string">'.'</span>);
+set(hnd,<span class="string">'color'</span>,0.7*[ 0 1 0] + .0*[ 1 0 1]);
+hnd=text( t+.5*h, x+.5*h*m2, <span class="string">'{\it m}_3'</span>);
+set(hnd,<span class="string">'color'</span>,0.7*[ 0 1 0] + .5*[ 1 0 1]);
+set(hnd,<span class="string">'horizontalalignment'</span>,<span class="string">'center'</span>)
+set(hnd,<span class="string">'verticalalignment'</span>,<span class="string">'top'</span>)
+set(hnd,<span class="string">'fontname'</span>,<span class="string">'times'</span>)
+</pre><img vspace="5" hspace="5" src="demo_rk4_11.png"> <p>Line with slope m3 through point (t,x)</p><pre class="codeinput">hnd=line( [ t-100*h t+100*h], [ x-100*h*m3 x+100*h*m3]);
+set(hnd,<span class="string">'color'</span>,0.7*[ 0 1 0] + .5*[ 1 0 1]);
+set(hnd,<span class="string">'linestyle'</span>,<span class="string">'--'</span>);
+</pre><img vspace="5" hspace="5" src="demo_rk4_12.png"> <p>Mark slope m4.</p><pre class="codeinput">hnd=line( [ t+h-.1*h t+h+.1*h], [ x+h*m3-.1*h*m4 x+h*m3+.1*h*m4]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 .7 0] + .0*[ 0 0 1]);
+hnd=plot( t+h, x+h*m3, <span class="string">'.'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 .7 0] + .0*[ 0 0 1]);
+hnd=text( t+h, x+h*m3, <span class="string">'{\it m}_4'</span>);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 .7 0] + .5*[ 0 0 1]);
+set(hnd,<span class="string">'horizontalalignment'</span>,<span class="string">'center'</span>)
+set(hnd,<span class="string">'verticalalignment'</span>,<span class="string">'bottom'</span>)
+set(hnd,<span class="string">'fontname'</span>,<span class="string">'times'</span>)
+</pre><img vspace="5" hspace="5" src="demo_rk4_13.png"> <p>Line with slope m4 through point (t,x)</p><pre class="codeinput">hnd=line( [ t-100*h t+100*h], [ x-100*h*m4 x+100*h*m4]);
+set(hnd,<span class="string">'color'</span>,1.0*[ 1 .7 0] + .5*[ 0 0 1]);
+set(hnd,<span class="string">'linestyle'</span>,<span class="string">'--'</span>);
+</pre><img vspace="5" hspace="5" src="demo_rk4_14.png"> <p>RK4 segment</p><pre class="codeinput">hnd=line( [ t t+h], [ x x+h*(m1+2*m2+2*m3+m4)/6]);
+set(hnd,<span class="string">'linewidth'</span>,2);
+set(hnd,<span class="string">'color'</span>,[ 1 0 0]);
+hnd=line( [ t-100*h t+100*h], [ x-100*h*(m1+2*m2+2*m3+m4)/6 x+100*h*(m1+2*m2+2*m3+m4)/6]);
+set(hnd,<span class="string">'color'</span>,[ 1 0 0]);
+set(hnd,<span class="string">'linestyle'</span>,<span class="string">'--'</span>);
+<span class="comment">% Mark starting point of step.</span>
+hnd = plot( t, x, <span class="string">'.'</span>);
+set(hnd,<span class="string">'markersize'</span>,markersize);
+set(hnd,<span class="string">'color'</span>,[ 1 0 0]);
+
+<span class="comment">% Mark ending point of RK4 segment.</span>
+hnd = plot( t+h, x+h*(m1+2*m2+2*m3+m4)/6, <span class="string">'.'</span>);
+set(hnd,<span class="string">'markersize'</span>,markersize);
+set(hnd,<span class="string">'color'</span>,[ 1 0 0]);
+</pre><img vspace="5" hspace="5" src="demo_rk4_15.png"> <p>Draw remaining steps of RK4 for reference.</p><pre class="codeinput">temp = t;
+x = xsoln(t);
+m1 = f(t     , x);
+m2 = f(t+.5*h, x+.5*h*m1);
+m3 = f(t+.5*h, x+.5*h*m2);
+m4 = f(t+   h, x+   h*m3);
+<span class="keyword">while</span> t &lt; 1-2*h
+  t = t + h;
+  x = x+h*(m1+2*m2+2*m3+m4)/6;
+  <span class="comment">%m1 = xdirs(1,round(t*nt/t1)+1);</span>
+  <span class="comment">%m2 = xdirs(1,round((t+.5*h)*nt/t1)+1);</span>
+  <span class="comment">%m3 = xdirs(1,round((t+.5*h)*nt/t1)+1);</span>
+  <span class="comment">%m4 = xdirs(1,round((t+h)*nt/t1)+1);</span>
+  m1 = f(t     , x);
+  m2 = f(t+.5*h, x+.5*h*m1);
+  m3 = f(t+.5*h, x+.5*h*m2);
+  m4 = f(t+   h, x+   h*m3);
+  hnd = line( [ t t+h], [ x x+h*(m1+2*m2+2*m3+m4)/6]);
+  set(hnd,<span class="string">'color'</span>, [ 1 0 0] + .5*[ 0 1 1]);
+<span class="keyword">end</span>
+t = temp;
+x = xsoln(t);
+m1 = xdirs(1,ti1);
+<span class="keyword">while</span> t &gt; 0
+  <span class="comment">%m1 = xdirs(1,round(t*nt/t1)+1);</span>
+  <span class="comment">%m2 = xdirs(1,round((t-.5*h)*nt/t1)+1);</span>
+  <span class="comment">%m3 = xdirs(1,round((t-.5*h)*nt/t1)+1);</span>
+  <span class="comment">%m4 = xdirs(1,round((t-h)*nt/t1)+1);</span>
+  m1 = f(t     , x);
+  m2 = f(t-.5*h, x-.5*h*m1);
+  m3 = f(t-.5*h, x-.5*h*m2);
+  m4 = f(t-   h, x-   h*m3);
+  hnd = line( [ t t-h], [ x x-h*(m1+2*m2+2*m3+m4)/6]);
+  set(hnd,<span class="string">'color'</span>, [ 1 0 0] + .5*[ 0 1 1]);
+  t = t - h;
+  x = x-h*(m1+2*m2+2*m3+m4)/6;
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="demo_rk4_16.png"> <p class="footer"><br>
+            Published with MATLAB&reg; 7.5<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%%
+t = 0.3;
+
+t0=0;
+t1=1;
+nt = 100; % Number of intervals
+tvec = linspace(t0,t1,nt+1);
+dt = tvec(2)-tvec(1);
+
+if( t<t0 || t>t1)
+  t = 0.3;
+end
+
+x0=0;
+x1=1;
+nx = 100; % Number of intervals
+xvec = linspace(x0,x1,nx+1);
+dx = xvec(2)-xvec(1);
+
+[tmesh,xmesh] = meshgrid(tvec,xvec);
+tdirs = ones(size(tmesh));
+xdirs = f( tmesh, xmesh);
+smesh = sqrt(tdirs.^2+xdirs.^2); % Scaling factors
+
+set(gca,'fontname','times');
+set(gca,'ydir','reverse');
+set(gca,'yticklabel',flipud(get(gca,'yticklabel')));
+axis image;
+axis([ t0 t1 x0 x1]);
+set(gca,'activepositionproperty','position');
+hold on;
+title('RK4');
+xlabel('{\it t}');
+ylabel('{\it x}');
+
+markersize = 14;
+
+%%
+% Grid.
+for i=t0:dt:t1
+    hnd = line( i*[ 1 1],   [ x0 x1]);
+    set(hnd, 'color',0.9*[ 1 1 1]);
+end
+for i=x0:dx:x1
+    hnd = line(   [ t0 t1], i*[ 1 1]);
+    set(hnd, 'color',0.9*[ 1 1 1]);
+end
+
+%%
+% Direction field. (May not show up very well at this zoom level, but we will
+% zoom in soon.)
+colormap(gray);
+hnd=quiver(tmesh,xmesh,tdirs./smesh,xdirs./smesh,1/3);
+set(hnd,'showarrowhead','off');
+set(hnd,'color',0.8*[ 1 1 1]);
+hnd=quiver(tmesh,xmesh,-tdirs./smesh,-xdirs./smesh,1/3);
+set(hnd,'showarrowhead','off');
+set(hnd,'color',0.8*[ 1 1 1]);
+
+%%
+% Exact solution from t0 to t1 with initial condition (0,0).
+hnd=plot( tvec, xsoln(tvec));
+set(hnd,'color',0.5*[ 1 1 1]);
+
+ti1 = t*nt/t1+1; % Where/when to start the step.
+h = 10*dt;     % Absurdly large step size for illustration.
+ti2 = (t+h)*nt/t1+1; % Where/when to start the step.
+x  = xsoln(t);
+x2 = xsoln(t+h);
+m1 = f(t     , x);
+m2 = f(t+.5*h, x+.5*h*m1);
+m3 = f(t+.5*h, x+.5*h*m2);
+m4 = f(t+   h, x+   h*m3);
+
+%%
+% Darken solution over range of the step and mark starting and ending points.
+trange = [ti1:ti2];
+hnd=plot( tvec(trange), xsoln(tvec(trange)));
+set(hnd,'linewidth',2);
+set(hnd,'color',0.5*[ 1 1 1]);
+
+hnd = plot( t, x, '.');
+set(hnd,'markersize',markersize);
+set(hnd,'color',0.5*[ 1 1 1]);
+hnd = plot( t+h, xsoln(t+h), '.');
+set(hnd,'markersize',markersize);
+set(hnd,'color',0.5*[ 1 1 1]);
+
+%%
+% Zoom in
+axis([ t-.5*h t+h+.5*h xsoln(t+h)-.5*h xsoln(t)+.5*h]);
+
+%%
+% Mark slope m1.
+hnd=line( [ t-.1*h t+.1*h], [ x-.1*h*m1 x+.1*h*m1]);
+set(hnd,'color',1.0*[ 0 0 1] + .0*[ 1 1 0]);
+hnd=plot( t, x, '.');
+set(hnd,'color',1.0*[ 0 0 1] + .0*[ 1 1 0]);
+hnd=text( t, x, '{\it m}_1');
+set(hnd,'color',1.0*[ 0 0 1] + .5*[ 1 1 0]);
+set(hnd,'horizontalalignment','center')
+set(hnd,'verticalalignment','top')
+set(hnd,'fontname','times')
+
+%%
+% Line with slope m1 through point (t,x)
+hnd=line( [ t-100*h t+100*h], [ x-100*h*m1 x+100*h*m1]);
+set(hnd,'color',1.0*[ 0 0 1] + .5*[ 1 1 0]);
+set(hnd,'linestyle','REPLACE_WITH_DASH_DASH');
+
+%%
+% Mark slope m2.
+hnd=line( [ t+.5*h-.1*h t+.5*h+.1*h], [ x+.5*h*m1-.1*h*m2 x+.5*h*m1+.1*h*m2]);
+set(hnd,'color',1.0*[ 1 0 1] + .0*[ 0 1 0]);
+hnd=plot( t+.5*h, x+.5*h*m1, '.');
+set(hnd,'color',1.0*[ 1 0 1] + .0*[ 0 1 0]);
+hnd=text( t+.5*h, x+.5*h*m1, '{\it m}_2');
+set(hnd,'color',1.0*[ 1 0 1] + .5*[ 0 1 0]);
+set(hnd,'horizontalalignment','right')
+set(hnd,'verticalalignment','bottom')
+set(hnd,'fontname','times')
+
+%%
+% Line with slope m2 through point (t,x)
+hnd=line( [ t-100*h t+100*h], [ x-100*h*m2 x+100*h*m2]);
+set(hnd,'color',1.0*[ 1 0 1] + .5*[ 0 1 0]);
+set(hnd,'linestyle','REPLACE_WITH_DASH_DASH');
+
+%%
+% Mark slope m3.
+hnd=line( [ t+.5*h-.1*h t+.5*h+.1*h], [ x+.5*h*m2-.1*h*m3 x+.5*h*m2+.1*h*m3]);
+set(hnd,'color',0.7*[ 0 1 0] + .0*[ 1 0 1]);
+hnd=plot( t+.5*h, x+.5*h*m2, '.');
+set(hnd,'color',0.7*[ 0 1 0] + .0*[ 1 0 1]);
+hnd=text( t+.5*h, x+.5*h*m2, '{\it m}_3');
+set(hnd,'color',0.7*[ 0 1 0] + .5*[ 1 0 1]);
+set(hnd,'horizontalalignment','center')
+set(hnd,'verticalalignment','top')
+set(hnd,'fontname','times')
+
+%%
+% Line with slope m3 through point (t,x)
+hnd=line( [ t-100*h t+100*h], [ x-100*h*m3 x+100*h*m3]);
+set(hnd,'color',0.7*[ 0 1 0] + .5*[ 1 0 1]);
+set(hnd,'linestyle','REPLACE_WITH_DASH_DASH');
+
+%%
+% Mark slope m4.
+hnd=line( [ t+h-.1*h t+h+.1*h], [ x+h*m3-.1*h*m4 x+h*m3+.1*h*m4]);
+set(hnd,'color',1.0*[ 1 .7 0] + .0*[ 0 0 1]);
+hnd=plot( t+h, x+h*m3, '.');
+set(hnd,'color',1.0*[ 1 .7 0] + .0*[ 0 0 1]);
+hnd=text( t+h, x+h*m3, '{\it m}_4');
+set(hnd,'color',1.0*[ 1 .7 0] + .5*[ 0 0 1]);
+set(hnd,'horizontalalignment','center')
+set(hnd,'verticalalignment','bottom')
+set(hnd,'fontname','times')
+
+%%
+% Line with slope m4 through point (t,x)
+hnd=line( [ t-100*h t+100*h], [ x-100*h*m4 x+100*h*m4]);
+set(hnd,'color',1.0*[ 1 .7 0] + .5*[ 0 0 1]);
+set(hnd,'linestyle','REPLACE_WITH_DASH_DASH');
+
+%%
+% RK4 segment
+hnd=line( [ t t+h], [ x x+h*(m1+2*m2+2*m3+m4)/6]);
+set(hnd,'linewidth',2);
+set(hnd,'color',[ 1 0 0]);
+hnd=line( [ t-100*h t+100*h], [ x-100*h*(m1+2*m2+2*m3+m4)/6 x+100*h*(m1+2*m2+2*m3+m4)/6]);
+set(hnd,'color',[ 1 0 0]);
+set(hnd,'linestyle','REPLACE_WITH_DASH_DASH');
+% Mark starting point of step.
+hnd = plot( t, x, '.');
+set(hnd,'markersize',markersize);
+set(hnd,'color',[ 1 0 0]);
+
+% Mark ending point of RK4 segment.
+hnd = plot( t+h, x+h*(m1+2*m2+2*m3+m4)/6, '.');
+set(hnd,'markersize',markersize);
+set(hnd,'color',[ 1 0 0]);
+
+%%
+% Draw remaining steps of RK4 for reference.
+temp = t;
+x = xsoln(t);
+m1 = f(t     , x);
+m2 = f(t+.5*h, x+.5*h*m1);
+m3 = f(t+.5*h, x+.5*h*m2);
+m4 = f(t+   h, x+   h*m3);
+while t < 1-2*h
+  t = t + h;
+  x = x+h*(m1+2*m2+2*m3+m4)/6;
+  %m1 = xdirs(1,round(t*nt/t1)+1);
+  %m2 = xdirs(1,round((t+.5*h)*nt/t1)+1);
+  %m3 = xdirs(1,round((t+.5*h)*nt/t1)+1);
+  %m4 = xdirs(1,round((t+h)*nt/t1)+1);
+  m1 = f(t     , x);
+  m2 = f(t+.5*h, x+.5*h*m1);
+  m3 = f(t+.5*h, x+.5*h*m2);
+  m4 = f(t+   h, x+   h*m3);
+  hnd = line( [ t t+h], [ x x+h*(m1+2*m2+2*m3+m4)/6]);
+  set(hnd,'color', [ 1 0 0] + .5*[ 0 1 1]);
+end
+t = temp;
+x = xsoln(t);
+m1 = xdirs(1,ti1);
+while t > 0
+  %m1 = xdirs(1,round(t*nt/t1)+1);
+  %m2 = xdirs(1,round((t-.5*h)*nt/t1)+1);
+  %m3 = xdirs(1,round((t-.5*h)*nt/t1)+1);
+  %m4 = xdirs(1,round((t-h)*nt/t1)+1);
+  m1 = f(t     , x);
+  m2 = f(t-.5*h, x-.5*h*m1);
+  m3 = f(t-.5*h, x-.5*h*m2);
+  m4 = f(t-   h, x-   h*m3);
+  hnd = line( [ t t-h], [ x x-h*(m1+2*m2+2*m3+m4)/6]);
+  set(hnd,'color', [ 1 0 0] + .5*[ 0 1 1]);
+  t = t - h;
+  x = x-h*(m1+2*m2+2*m3+m4)/6;
+end
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>
